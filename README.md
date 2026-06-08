@@ -1,2 +1,2 @@
 # gcp-storage-provisioner
-Pulumi IasC reposotory
+Pulumi IasC repository
