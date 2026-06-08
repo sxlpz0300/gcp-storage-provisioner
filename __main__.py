@@ -2,42 +2,55 @@ import os
 import yaml
 import pulumi
 import pulumi_gcp as gcp
+from modules import MedallionStorage, OrchestratorComposer
 
-# 1. Load custom YAML configuration
-config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
+# 1. Load Dynamic Configuration Environment File
+env_config_file = os.getenv("PULUMI_CONFIG_FILE", "config/dev.yaml")
+config_path = os.path.join(os.path.dirname(__file__), env_config_file)
+
 with open(config_path, "r") as stream:
     try:
         config_data = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
-        raise Exception(f"Error parsing config.yaml: {exc}")
+        raise Exception(f"Failed to parse configuration file: {exc}")
 
-# 2. Extract configuration variables
+# 2. Extract Base Parameters
 gcp_project = config_data.get("project_id")
-gcp_region = config_data.get("region", "us-central1")
-bucket_suffix = config_data.get("bucket_name_suffix", "storage-bucket")
-storage_class = config_data.get("storage_class", "STANDARD")
+gcp_region = config_data.get("region")
+environment = config_data.get("environment")
 
-# 3. Explicitly configure the GCP Provider using local gcloud credentials
+# 3. Initialize Provider using Impersonation Strategy
 gcp_provider = gcp.Provider(
-    "local-gcp-provider",
+    "impersonated-gcp-provider",
     project=gcp_project,
     region=gcp_region
 )
 
-# 4. Generate a unique bucket name to avoid collisions
-bucket_name = f"{gcp_project}-{bucket_suffix}"
+# Resource options passing the standard provider inherited locally
+resource_opts = pulumi.ResourceOptions(provider=gcp_provider)
 
-# 5. Provision the GCP Cloud Storage Bucket
-storage_bucket = gcp.storage.Bucket(
-    "gcp-storage-bucket",
-    name=bucket_name,
-    location=gcp_region,
-    storage_class=storage_class,
-    force_destroy=True,  # Allows deletion even if it contains objects (useful for dev)
-    uniform_bucket_level_access=True,
-    opts=pulumi.ResourceOptions(provider=gcp_provider)
+# 4. Provision Medallion Storage Component
+storage_infrastructure = MedallionStorage(
+    name="medallion-data-lake",
+    project_id=gcp_project,
+    region=gcp_region,
+    env=environment,
+    layers=config_data.get("storage_layers", []),
+    opts=resource_opts
 )
 
-# 6. Export outputs
-pulumi.export("bucket_name", storage_bucket.name)
-pulumi.export("bucket_url", storage_bucket.url)
+# 5. Provision Cloud Composer Component
+orchestration_infrastructure = OrchestratorComposer(
+    name="workflow-orchestrator",
+    project_id=gcp_project,
+    region=gcp_region,
+    env=environment,
+    config=config_data.get("composer_env", {}),
+    opts=resource_opts
+)
+
+# 6. Global Platform Exports
+pulumi.export("deployed_environment", environment)
+pulumi.export("storage_buckets", storage_infrastructure.bucket_outputs)
+pulumi.export("composer_env_name", orchestration_infrastructure.composer_name)
+pulumi.export("airflow_ui_url", orchestration_infrastructure.airflow_uri)

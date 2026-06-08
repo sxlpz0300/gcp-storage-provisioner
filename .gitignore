@@ -1,6 +1,15 @@
 # Customized
 config.yaml
+config/dev.yaml
+config/stg.yaml
+config/prd.yaml
+
 notes.md
+*.pyc
+.pulumi/
+Pulumi.*.yaml
+!Pulumi.yaml
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

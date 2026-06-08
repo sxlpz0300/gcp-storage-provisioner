@@ -1,0 +1,25 @@
+project_id: ""
+region: ""
+environment: ""
+
+# Medallion Storage Layers
+storage_layers:
+  - name: "bronze"
+    storage_class: "STANDARD"
+    versioning: true
+  - name: "silver"
+    storage_class: "STANDARD"
+    versioning: false
+  - name: "gold"
+    storage_class: "STANDARD"
+    versioning: false
+
+# Cloud Composer (Airflow Environment) Configuration
+composer_env:
+  name: ""
+  environment_size: ""
+  image_version: ""
+  pypi_packages:
+    pulumi: ">=3.0.0"
+    pandas: ">=2.0.0"
+    scikit-learn: ">=1.0.0"

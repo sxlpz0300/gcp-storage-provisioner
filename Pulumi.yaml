@@ -3,4 +3,4 @@ runtime:
   name: python
   options:
     virtualenv: .venv
-description: A minimal local Pulumi project to provision a GCP Cloud Storage bucket.
+description: Data platform provisioning tool for Medallion storage and Cloud Composer.
