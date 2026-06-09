@@ -39,17 +39,25 @@ storage_infrastructure = MedallionStorage(
     opts=resource_opts
 )
 
-# 5. Provision Cloud Composer Component
+# 5. Extract and Construct Service Account Email Dynamically
+composer_config = config_data.get("composer_env", {})
+sa_name = composer_config.get("service_account_name", "pulumi-local-deployer")
+
+# Dynamic generation preventing hardcoded string repetitions
+constructed_sa_email = f"{sa_name}@{gcp_project}.iam.gserviceaccount.com"
+
+# 6. Provision Cloud Composer Component (Passing the constructed email)
 orchestration_infrastructure = OrchestratorComposer(
     name="workflow-orchestrator",
     project_id=gcp_project,
     region=gcp_region,
     env=environment,
-    config=config_data.get("composer_env", {}),
+    service_account_email=constructed_sa_email,  # Injected directly here
+    config=composer_config,
     opts=resource_opts
 )
 
-# 6. Global Platform Exports
+# 7. Global Platform Exports
 pulumi.export("deployed_environment", environment)
 pulumi.export("storage_buckets", storage_infrastructure.bucket_outputs)
 pulumi.export("composer_env_name", orchestration_infrastructure.composer_name)

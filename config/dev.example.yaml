@@ -1,24 +1,25 @@
 project_id: ""
 region: ""
-environment: ""
+environment: "dev"
 
 # Medallion Storage Layers
 storage_layers:
-  - name: "bronze"
+  - name: ""
     storage_class: "STANDARD"
     versioning: true
-  - name: "silver"
+  - name: ""
     storage_class: "STANDARD"
     versioning: false
-  - name: "gold"
+  - name: ""
     storage_class: "STANDARD"
     versioning: false
 
 # Cloud Composer (Airflow Environment) Configuration
 composer_env:
   name: ""
-  environment_size: ""
-  image_version: ""
+  environment_size: "ENVIRONMENT_SIZE_SMALL"
+  image_version: "composer-3-airflow-2.11.1"
+  service_account_name: ""
   pypi_packages:
     pulumi: ">=3.0.0"
     pandas: ">=2.0.0"

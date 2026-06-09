@@ -5,7 +5,7 @@ class OrchestratorComposer(pulumi.ComponentResource):
     """
     Component resource to provision a GCP Cloud Composer environment with specific PyPI packages.
     """
-    def __init__(self, name: str, project_id: str, region: str, env: str, config: dict, opts: pulumi.ResourceOptions = None):
+    def __init__(self, name: str, project_id: str, region: str, env: str, service_account_email: str, config: dict, opts: pulumi.ResourceOptions = None):
         super().__init__("custom:gcp:OrchestratorComposer", name, {}, opts)
         
         env_name = f"{env}-{config.get('name', 'orchestrator')}-env"
@@ -16,6 +16,10 @@ class OrchestratorComposer(pulumi.ComponentResource):
             name=env_name,
             region=region,
             config=gcp.composer.EnvironmentConfigArgs(
+                node_config=gcp.composer.EnvironmentConfigNodeConfigArgs(
+                    # Consuming the parameter built dynamically in __main__.py
+                    service_account=service_account_email
+                ),
                 software_config=gcp.composer.EnvironmentConfigSoftwareConfigArgs(
                     image_version=config.get("image_version"),
                     pypi_packages=pypi_packages
